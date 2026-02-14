@@ -183,17 +183,30 @@
             transform: translate(-50%, -50%);
             font-family: 'Playfair Display', serif;
             font-size: 64px;
-            color: rgba(255, 240, 245, 0);
+            color: rgba(255, 240, 245, 0.3);
             font-weight: 400;
             letter-spacing: 4px;
             z-index: 26;
             text-shadow: 0 0 20px rgba(255, 192, 203, 0.3);
-            transition: color 2s ease, opacity 2s ease;
+            filter: blur(10px);
+            transition: color 2s ease, opacity 2s ease, filter 2s ease;
         }
 
         .ending-text.active {
             color: rgba(255, 240, 245, 0.95);
             opacity: 1;
+            filter: blur(0px);
+            text-shadow: 0 0 30px rgba(255, 192, 203, 0.8), 0 0 60px rgba(255, 192, 203, 0.4);
+            animation: textGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes textGlow {
+            0%, 100% {
+                text-shadow: 0 0 30px rgba(255, 192, 203, 0.8), 0 0 60px rgba(255, 192, 203, 0.4);
+            }
+            50% {
+                text-shadow: 0 0 40px rgba(255, 192, 203, 1), 0 0 80px rgba(255, 192, 203, 0.6);
+            }
         }
 
         .particle {
@@ -227,7 +240,7 @@
 <body>
     <canvas id="canvas"></canvas>
     <div class="star-field" id="starField"></div>
-    <div class="counter" id="counter">Memories Revealed: 0 / 11</div>
+    <div class="counter" id="counter">Messages Revealed: 0 / 11</div>
     <div class="ending-overlay" id="endingOverlay"></div>
     <div class="ending-text" id="endingText">Happy Valentine's Day</div>
 
@@ -364,44 +377,13 @@
             }, 300);
             
             revealedCount++;
-            document.getElementById('counter').textContent = `Memories Revealed: ${revealedCount} / 11`;
+            document.getElementById('counter').textContent = `Messages Revealed: ${revealedCount} / 11`;
             
             if (revealedCount === 11) {
                 setTimeout(() => {
                     startEndingAnimation();
                 }, 1000);
             }
-        }
-
-        // Calculate heart shape positions
-        function getHeartPositions(centerX, centerY, scale = 1) {
-            const positions = [];
-            const numPoints = 8;
-            
-            for (let i = 0; i < numPoints; i++) {
-                const t = (i / numPoints) * Math.PI * 2;
-                let x, y;
-                
-                // Heart curve formula
-                if (i < 4) {
-                    // Left side of heart
-                    const angle = (i / 4) * Math.PI;
-                    x = -16 * Math.pow(Math.sin(angle), 3) * scale;
-                    y = -(13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle)) * scale;
-                } else {
-                    // Right side of heart
-                    const angle = ((i - 4) / 4) * Math.PI;
-                    x = 16 * Math.pow(Math.sin(angle), 3) * scale;
-                    y = -(13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle)) * scale;
-                }
-                
-                positions.push({
-                    x: centerX + x,
-                    y: centerY + y
-                });
-            }
-            
-            return positions;
         }
 
         // Start ending animation
@@ -412,59 +394,11 @@
             
             overlay.classList.add('active');
             
-            // Calculate center position
-            const centerX = window.innerWidth / 2;
-            const centerY = window.innerHeight / 2;
-            
-            // Get heart shape positions
-            const heartPositions = getHeartPositions(centerX, centerY, 25);
-            
-            // Animate stars to heart positions
-            memoryStars.forEach((starData, index) => {
-                starData.targetX = heartPositions[index].x;
-                starData.targetY = heartPositions[index].y;
-            });
-            
-            // Animate stars moving to heart shape
-            let startTime = null;
-            const duration = 2000;
-            
-            function animateStars(timestamp) {
-                if (!startTime) startTime = timestamp;
-                const progress = Math.min((timestamp - startTime) / duration, 1);
-                
-                // Easing function (ease-in-out)
-                const eased = progress < 0.5 
-                    ? 2 * progress * progress 
-                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-                
-                memoryStars.forEach((starData) => {
-                    const currentX = starData.x + (starData.targetX - starData.x) * eased;
-                    const currentY = starData.y + (starData.targetY - starData.y) * eased;
-                    
-                    starData.element.style.left = currentX + 'px';
-                    starData.element.style.top = currentY + 'px';
-                    
-                    // Update bubble position if it exists
-                    if (starData.bubble) {
-                        const rect = starData.element.getBoundingClientRect();
-                        starData.bubble.style.left = (rect.left + rect.width / 2) + 'px';
-                        starData.bubble.style.top = (rect.top - 50) + 'px';
-                    }
-                });
-                
-                if (progress < 1) {
-                    animationId = requestAnimationFrame(animateStars);
-                } else {
-                    // Show ending text
-                    setTimeout(() => {
-                        endingText.classList.add('active');
-                        createParticleField();
-                    }, 500);
-                }
-            }
-            
-            animationId = requestAnimationFrame(animateStars);
+            // Show ending text with glow
+            setTimeout(() => {
+                endingText.classList.add('active');
+                createParticleField();
+            }, 500);
         }
 
         // Create particle field
